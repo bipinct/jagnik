@@ -407,6 +407,14 @@ class _MyHomePageState extends State<MyHomePage>
                         colorFilter: ColorFilter.matrix(filterMatrix),
                       )),
                     ),
+              errorWidget: (context,url,error) =>
+                  Container(
+                    decoration: BoxDecoration(
+                        image: DecorationImage(
+                            image: AssetImage("assets/default.jpeg"),
+                            colorFilter: ColorFilter.matrix(filterMatrix),
+                            fit: BoxFit.cover)),
+                  ),
                   )
                 : Container(
                     decoration: BoxDecoration(
@@ -621,7 +629,7 @@ class _MyHomePageState extends State<MyHomePage>
       child: Container(
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: Colors.black87,
+          color: Colors.blueGrey,
           shape: BoxShape.rectangle,
         ),
         child: CachedNetworkImage(
@@ -631,6 +639,9 @@ class _MyHomePageState extends State<MyHomePage>
             decoration: BoxDecoration(
                 image:
                     DecorationImage(image: imageProvider, fit: BoxFit.cover)),
+          ),
+          errorWidget: (context, url, error) =>Container(
+            child: Icon(Icons.error,color: Colors.white70,),
           ),
         ),
       ),
@@ -1328,6 +1339,7 @@ class _SplashState extends State<Splash> {
   }
 
   double logoWidth= 160.0;
+  bool loadingHome = true;
   @override
   Widget build(BuildContext context) {
     double _width = MediaQuery.of(context).size.width;
@@ -1360,10 +1372,18 @@ class _SplashState extends State<Splash> {
                 image: AssetImage("assets/logo.png"),
               ),
             ))),
+        loadingHome ?
+        Positioned(
+          bottom: 40,
+          right: _width /2,
+          width: 30,
+          height: 30,
+          child: CircularProgressIndicator(),
+        ): Column(),
         Positioned(
           bottom: 10,
           width: _width,
-          child: Text("Jagnik @ 2019",
+          child: Text("Jagnik @ 2019 ",
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 18.0,
@@ -1378,8 +1398,7 @@ class _SplashState extends State<Splash> {
 
   startTimer() async {
     await _loadDefault();
-    var _duration = Duration(milliseconds: 500);
-    return Timer(_duration, navigate);
+    navigate();
   }
 
   navigate() async {
@@ -1406,7 +1425,7 @@ class _SplashState extends State<Splash> {
       var Response = await http.get(
         apiUrl,
         headers: {"Accept": "application/json"},
-      );
+      ).timeout(const Duration(seconds: 5));
       if (Response.statusCode == 200) {
         String responseBody = Response.body;
         var responseJSON = json.decode(responseBody);
@@ -1417,6 +1436,9 @@ class _SplashState extends State<Splash> {
     } catch (err) {
       print(err);
     }
+    setState(() {
+      loadingHome = false;
+    });
     return true;
   }
 }
