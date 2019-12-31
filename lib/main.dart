@@ -769,12 +769,13 @@ class _MyHomePageState extends State<MyHomePage>
     ui.Image image = await boundary.toImage(pixelRatio: pixelRatio);
     ByteData byteData = await image.toByteData(format: ui.ImageByteFormat.png);
     Uint8List pngBytes = byteData.buffer.asUint8List();
-    final directory = "/storage/emulated/legacy/JAGNIK";
+    final directory = await getApplicationSupportDirectory();
+    var _file = directory.path;
     String now = DateTime.now().toString();
     now = now.split(new RegExp(r"(:|-)")).join("_");
     now = now.split(" ").join("_");
     now = now.split(".").join("_");
-    String _filename = '$directory/q-$now.png';
+    String _filename = '_file/q-$now.png';
     File imgFile = new File(_filename);
     imgFile.writeAsBytesSync(pngBytes);
     setState(() {
@@ -1234,7 +1235,7 @@ class _MyHomePageState extends State<MyHomePage>
     try {
       final directory = await getApplicationSupportDirectory();
       List externalDirectory = await getExternalStorageDirectories();
-      new Directory("/storage/emulated/legacy/" + appName)
+      new Directory(directory.path)
           .create(recursive: true)
           .then((Directory newdir) {
         // if error in directory creation
@@ -1411,7 +1412,7 @@ class _SplashState extends State<Splash> {
   _loadDefault() async {
     final directory = await getApplicationSupportDirectory();
     List externalDirectory = await getExternalStorageDirectories();
-    await new Directory("/storage/emulated/legacy/JAGNIK")
+    await new Directory(directory.path)
         .create(recursive: true)
         .then((Directory newdir) {
       // if error in directory creation
