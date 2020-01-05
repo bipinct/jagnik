@@ -45,7 +45,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Flutter Demo',
+      title: 'Jagnik',
       theme: ThemeData(
         buttonTheme: ButtonThemeData(
             buttonColor: Color(0xffAA00FF),
@@ -207,7 +207,7 @@ class _MyHomePageState extends State<MyHomePage>
 
   Future<List<String>> _loadAImagesFromDownload() async {
     try {
-      final directory = await getApplicationSupportDirectory();
+      final directory = await getExternalStorageDirectory();
       var images = await rootBundle.loadString(directory.path + '/images.json');
       var responseJSON = json.decode(images);
       List<String> img = List();
@@ -366,6 +366,7 @@ class _MyHomePageState extends State<MyHomePage>
               child: Container(
                   width: 100,
                   height: 100,
+
                   decoration: BoxDecoration(
                       border: _imagePreviewBorder,
                       borderRadius: BorderRadius.all(Radius.circular(5.0)),
@@ -379,7 +380,10 @@ class _MyHomePageState extends State<MyHomePage>
                       shape: BoxShape.rectangle,
                       image: DecorationImage(
                           image: FileImage(new File(previewImage)),
-                          fit: BoxFit.cover))),
+                          fit: BoxFit.cover)
+                  )
+
+              ),
             ))
         : Container();
   }
@@ -769,17 +773,22 @@ class _MyHomePageState extends State<MyHomePage>
     ui.Image image = await boundary.toImage(pixelRatio: pixelRatio);
     ByteData byteData = await image.toByteData(format: ui.ImageByteFormat.png);
     Uint8List pngBytes = byteData.buffer.asUint8List();
-    final directory = await getApplicationSupportDirectory();
+    final directory = await getExternalStorageDirectory();
     var _file = directory.path;
     String now = DateTime.now().toString();
     now = now.split(new RegExp(r"(:|-)")).join("_");
     now = now.split(" ").join("_");
     now = now.split(".").join("_");
-    String _filename = '_file/q-$now.png';
+    String _filename = '$_file/q-$now.png';
     File imgFile = new File(_filename);
     imgFile.writeAsBytesSync(pngBytes);
+
+//    const MethodChannel _channel = MethodChannel('image_gallery_saver');
+//    print(MethodChannel);
+//    await _channel.invokeMethod('saveFileToGallery', _filename);
+
     setState(() {
-      previewImage = _filename;
+      previewImage =_filename;
       showProgressOnGenerate =false;
     });
   }
@@ -1289,6 +1298,7 @@ class _MyHomePageState extends State<MyHomePage>
                     controller: textController,
                     maxLines: null,
                     keyboardType: TextInputType.multiline,
+                    autofocus: true,
                     decoration: InputDecoration(hintText: textToShare),
                     onChanged: (newVal) {
                       setState(() {
@@ -1410,23 +1420,23 @@ class _SplashState extends State<Splash> {
   }
 
   _loadDefault() async {
-    final directory = await getApplicationSupportDirectory();
-    List externalDirectory = await getExternalStorageDirectories();
-    await new Directory(directory.path)
-        .create(recursive: true)
-        .then((Directory newdir) {
-      // if error in directory creation
-    });
+//    final directory = await getApplicationSupportDirectory();
+//    List externalDirectory = await getExternalStorageDirectories();
+//    await new Directory(directory.path)
+//        .create(recursive: true)
+//        .then((Directory newdir) {
+//      // if error in directory creation
+//    });
     await FetchJSON();
   }
 
   FetchJSON() async {
     try {
-      final directory = await getApplicationSupportDirectory();
+      final directory = await getExternalStorageDirectory();
       var Response = await http.get(
         apiUrl,
         headers: {"Accept": "application/json"},
-      ).timeout(const Duration(seconds: 5));
+      ).timeout(const Duration(seconds: 10));
       if (Response.statusCode == 200) {
         String responseBody = Response.body;
         var responseJSON = json.decode(responseBody);
