@@ -16,6 +16,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import  "package:jagnik/appimage.dart";
 
 var time = DateTime.now().millisecondsSinceEpoch;
 var today = DateTime.now().weekday;
@@ -92,8 +93,9 @@ class _MyHomePageState extends State<MyHomePage>
   String selectedFont = "Lato";
   TextAlign textAlign = TextAlign.start;
   bool showProgressOnGenerate= false;
-
   String filterApplied = "default";
+  Widget zoom;
+  Widget oldzoom;
   List<double> filterMatrix = [
     1,
     0,
@@ -248,7 +250,6 @@ class _MyHomePageState extends State<MyHomePage>
     double _maxHeightBottomSheet = _height - _initialSliderHeight - 20;
     double _middleHeightBottomSheet = _height / 2 - _initialSliderHeight;
     var _layouts = layouts.map<Widget>((book) => _fontView(book)).toList();
-
     var _fontSizes = fontsizes.map<Widget>((font) {
       return Container(
           child: GestureDetector(
@@ -323,7 +324,9 @@ class _MyHomePageState extends State<MyHomePage>
     return Scaffold(
         body: Stack(
       children: <Widget>[
-        mainBackground(context, _width, _height, _backgroundImageFromSource,
+//        mainBackground(context, _width, _height, _backgroundImageFromSource,
+//            backgroundImage, imageSource, filterMatrix),
+        buildBackground(context, _width, _height, _backgroundImageFromSource,
             backgroundImage, imageSource, filterMatrix),
         _screenShotButton(context),
         _previewDownloadedImage(),
@@ -388,8 +391,98 @@ class _MyHomePageState extends State<MyHomePage>
         : Container();
   }
 
+
+  //Container(
+  //             width: _width,
+  //              height: _height,
+  //              color: Colors.red,
+  //
+  //              child: ColorFiltered(
+  //                colorFilter: ColorFilter.matrix(filterMatrix) ,
+  //                child: ZoomableImage(
+  //                  new AssetImage("assets/default.jpeg"),
+  //                  placeholder: Center(child: CircularProgressIndicator(),),
+  //
+  //                ),
+  //              )
+  //           )
+
+
+  Widget buildBackground(BuildContext context, _width, _height,
+      _backgroundImageFromSource, backgroundImage, imageSource, filterMatrix) {
+    return  RepaintBoundary(
+      key: previewContainer,
+      child: Container(
+        width: _width,
+        height: _height,
+        child: Stack(
+          children: <Widget>[
+            imageSource == "internet"
+                ? CachedNetworkImage(
+              placeholder: (context, url) =>
+                  Center(child: CircularProgressIndicator()),
+              imageUrl:
+              backgroundImage + "?w=" + _width.toInt().toString(),
+              imageBuilder: (context, imageProvider) => Container(
+                decoration: BoxDecoration(
+                    image: DecorationImage(
+                      image: imageProvider,
+                      fit: BoxFit.cover,
+                      colorFilter: ColorFilter.matrix(filterMatrix),
+                    )),
+              ),
+              errorWidget: (context,url,error) =>
+                  Container(
+                    decoration: BoxDecoration(
+                        image: DecorationImage(
+                            image: AssetImage("assets/default.jpeg"),
+                            colorFilter: ColorFilter.matrix(filterMatrix),
+                            fit: BoxFit.cover)),
+                  ),
+            ) : Container(
+                 width: _width,
+                  height: _height,
+                  color: Colors.black87,
+                  child: ColorFiltered(
+                    colorFilter: ColorFilter.matrix(filterMatrix) ,
+                    child: zoom == null ? Container(): zoom
+                    ,
+                  )
+               ),
+            lyricsText(_width, _height, context),
+            Positioned(
+              bottom: 4,
+              right: 4,
+              child: Container(
+                  decoration: BoxDecoration(
+                      boxShadow: [
+                        BoxShadow(
+                            color: Colors.black,
+                            blurRadius: 100,
+                            offset: Offset(0.3, 0.6))
+                      ],
+                      image: DecorationImage(
+                          image: AssetImage("assets/watermark.png"),
+                          colorFilter: ColorFilter.matrix(filterMatrix),
+                          fit: BoxFit.cover)),
+                  width: 90,
+                  height: 24,
+                  child: Column()),
+            )
+          ],
+        ),
+      ),
+    );
+
+
+
+
+  }
+
+
   Widget mainBackground(BuildContext context, _width, _height,
       _backgroundImageFromSource, backgroundImage, imageSource, filterMatrix) {
+
     return RepaintBoundary(
       key: previewContainer,
       child: Container(
@@ -573,34 +666,15 @@ class _MyHomePageState extends State<MyHomePage>
 
   Widget _bottomSheetScrollButton(BuildContext context, _width, _height,
       _middleHeightBottomSheet, _maxHeightBottomSheet) {
-    return Container(
-        width: _width,
-        alignment: Alignment.center,
-        child: GestureDetector(
-          child: Container(
-              width: 140,
-              height: 40,
-              color: Colors.transparent,
-              child: Padding(
-                  padding: EdgeInsets.fromLTRB(30, 0, 30, 0),
-                  child: RotatedBox(
-                    quarterTurns: 1,
-                    child: FittedBox(
-                      fit: BoxFit.fill,
-                      child: Icon(
-                        Icons.first_page,
-                        color: Colors.white70,
-                        size: 30,
-                      ),
-                    ),
-                  ))),
+    return
+      GestureDetector(
           onTap: () {
             setState(() {
               _sliderHeight = _sliderHeight == _initialSliderHeight
                   ? _middleHeightBottomSheet
                   : _sliderHeight == _maxHeightBottomSheet
-                      ? _initialSliderHeight
-                      : _maxHeightBottomSheet;
+                  ? _initialSliderHeight
+                  : _maxHeightBottomSheet;
             });
           },
           onVerticalDragUpdate: (drag) {
@@ -615,11 +689,35 @@ class _MyHomePageState extends State<MyHomePage>
               _sliderHeight = _sliderHeight > _height / 2
                   ? _maxHeightBottomSheet
                   : _sliderHeight > _height / 3
-                      ? _middleHeightBottomSheet
-                      : _initialSliderHeight;
+                  ? _middleHeightBottomSheet
+                  : _initialSliderHeight;
             });
           },
-        ));
+        child:
+      Container(
+        width: _width,
+        alignment: Alignment.center,
+          child: Container(
+              width: 140,
+              height: 40,
+              color: Colors.transparent,
+              child: Padding(
+                  padding: EdgeInsets.fromLTRB(30, 0, 30, 0),
+                  child:
+
+                  RotatedBox(
+                    quarterTurns: _sliderHeight == _maxHeightBottomSheet ? 3 : 1,
+                    child: FittedBox(
+                      fit: BoxFit.fill,
+                      child: Icon(
+                        Icons.first_page,
+                        color: Colors.white70,
+                        size: 30,
+                      ),
+                    ),
+                  ))),
+      )
+    );
   }
 
   Widget _makeBackground(image) {
@@ -656,8 +754,9 @@ class _MyHomePageState extends State<MyHomePage>
     return GestureDetector(
       onTap: () {
         setState(() {
-          getImageFromGallery();
+          zoom = null;
         });
+        getImageFromGallery();
       },
       child: Container(
         alignment: Alignment.center,
@@ -1333,6 +1432,17 @@ class _MyHomePageState extends State<MyHomePage>
       setState(() {
         imageSource = "gallery";
         backgroundImage = image.path;
+          zoom = ZoomableImage(
+          FileImage(File(backgroundImage)),
+          placeholder: Center(child: CircularProgressIndicator(),),
+          imageName: backgroundImage,
+        );
+        oldzoom = zoom;
+      });
+    else
+      if(oldzoom != null)
+      setState(() {
+        zoom = oldzoom;
       });
   }
 }
@@ -1453,3 +1563,8 @@ class _SplashState extends State<Splash> {
     return true;
   }
 }
+
+
+
+
+
